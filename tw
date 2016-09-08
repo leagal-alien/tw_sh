@@ -1,0 +1,111 @@
+#/bin/bash
+
+this_ym=`date '+%Y%m'`
+this_ymd=`date '+%Y%m%d'`
+log_file=${this_ymd}.log
+log_dir=`dirname $0`/twlog/
+log_file_path=$log_dir$log_file
+
+argv=("$@")
+
+# フォルダ
+if [ ! -e $log_dir ]; then
+  mkdir $log_dir
+  :
+fi
+
+# ファイル
+if [ ! -e $log_file_path ]; then
+  touch $log_file_path
+  :
+fi
+
+# 
+if [ $1 == '--help' ]; then
+	cat <<- EOS
+		
+		つぶやきシェルスクリプト
+
+		使用法:  
+		       tw [つぶやき]
+		       tw [コマンド]
+
+		コマンド:
+		       ls        今日のつぶやきの一覧を表示
+		       la        今月のつぶやきの一覧を表示
+		       laa       すべてのつぶやきの一覧を表示
+		       rm        (準備中)指定したつぶやきを削除
+		       -t [時間文字列(H:M:S)] [つぶやき]
+		                 時間を指定して今日のつぶやきに追加
+		                 コマンド、時間文字列、つぶやきは半角スペースで区切ること
+		                 時間文字列が正しいフォーマットかどうかのチェックは行われません
+		       --help    この使い方を表示
+
+		例:
+		       基本
+		                 tw 今日はいい天気です。
+		       時間指定
+		                 tw -t 12:34:56 ランチにしようかな。
+
+		補足:
+		       logファイルはスクリプトと同じフォルダ以下の"twlog/"フォルダに格納されます
+
+	EOS
+  exit
+fi
+
+# コマンド ログの表示
+if [ $1 == 'ls' ]; then
+  cat $log_file_path
+  exit
+fi
+
+if [ $1 == 'la' ]; then
+  cat ${log_dir}${this_ym}*.log
+  exit
+fi
+
+if [ $1 == 'laa' ]; then
+  cat ${log_dir}*.log
+  exit
+fi
+
+if [ $1 == 'rm' ]; then
+  echo 準備中
+  exit
+fi
+
+# オプションの確認
+para=""
+time_str=""
+date_str=""
+if [ $1 == '-t' ]; then
+  i=0
+  for x in "$@"
+  do
+    # 作成中 書き込む内容からオプションの部分を削除する必要がある
+    if [ $x == '-t' ]; then
+      # -t の時は時間を-tのあとのパラメータにする
+      date_str=`date +"%Y/%m/%d"`" "${argv[`expr $i + 1`]}
+      time_str=${argv[`expr $i + 1`]}
+      :
+    else
+      if [ "$x" == "${time_str}" ]; then
+        :
+      else
+        para=${para}" "${x}
+      fi
+      :
+    fi
+    i=$(($i + 1))
+  done
+	:
+else
+  para=$@
+  date_str=`date +"%Y/%m/%d %H:%M:%S"`
+	:
+fi
+
+# 書き込み
+# echo $time_str $@ >> $log_file_path
+echo ${date_str}" "${para} >> $log_file_path
